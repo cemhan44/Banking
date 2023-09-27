@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Banking.Application;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,7 @@ namespace Order.WebApi.Controllers
 	    }
 		
 		[HttpPut("Deposit")]
-		public ActionResult Deposit(Int32 holderId, String accountNumber, Decimal moneyToDeposit)
+		public ActionResult Deposit(Int32 holderId, String accountNumber, [Range(0.01d, 10000d)] Decimal moneyToDeposit)
 	    {
 		    try
 		    {
@@ -34,9 +35,7 @@ namespace Order.WebApi.Controllers
         [HttpPut("Withdraw")]
         public ActionResult Withdraw(Int32 holderId, String accountNumber, Decimal moneyToDeposit)
         {
-           
-
-            try
+	        try
             {
 	            _AccountRepository.Withdraw(holderId, accountNumber, moneyToDeposit);
 
@@ -68,7 +67,7 @@ namespace Order.WebApi.Controllers
         {
 	        try
             {
-	            _AccountRepository.OpenAccount(holderId, accountNumber, accountNumber, initialBalance);
+	            _AccountRepository.OpenAccount(holderId, accountName, accountNumber, initialBalance);
 
 	            return Ok();
             }

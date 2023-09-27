@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Banking.Domain.AggregateModels.AccountModels;
 using Banking.Domain.AggregateModels.CustomerModels;
 using Banking.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace Banking.Infrastructure
 {
@@ -42,7 +43,7 @@ namespace Banking.Infrastructure
 			    throw new Exception("Holder could not be found!");
 
 		    if (!IsCustomerAccountNumberExist(holderId, accountNumber))
-			    throw new Exception("There is an account with same number!");
+			    throw new Exception("There is not a customer account with same number!");
 
 		    Account accountToDelete = _DbContext.Accounts.First(s => s.Number == accountNumber);
 		    _DbContext.Accounts.Remove(accountToDelete);
@@ -60,11 +61,12 @@ namespace Banking.Infrastructure
 			    throw new Exception("Holder could not be found!");
 
 		    if (!IsCustomerAccountNumberExist(holderId, accountNumber))
-			    throw new Exception("There is an account with same number!");
+			    throw new Exception("There is not a customer account with same number!");
 
 
 		    Account account = _DbContext.Accounts.First(s => s.HolderId == holderId);
 		    account.Balance += money;
+			account.UpdateDate = DateTime.Now;
 		    _DbContext.Accounts.Update(account);
 		    SaveChangesAsync();
 	    }
@@ -80,7 +82,7 @@ namespace Banking.Infrastructure
 		        throw new Exception("Holder could not be found!");
 
 	        if (!IsCustomerAccountNumberExist(holderId, accountNumber))
-		        throw new Exception("There is an account with same number!");
+		        throw new Exception("There is not a customer account with same number!");
 
 	        Account account = _DbContext.Accounts.First(s => s.HolderId == holderId);
 
@@ -91,7 +93,8 @@ namespace Banking.Infrastructure
 		        throw new Exception("Single transaction limited with %90 of balance!");
 
 			account.Balance -= money;
-            _DbContext.Accounts.Update(account);
+			account.UpdateDate = DateTime.Now;
+			_DbContext.Accounts.Update(account);
             SaveChangesAsync();
 		}
 
@@ -113,9 +116,14 @@ namespace Banking.Infrastructure
         }
         private Boolean IsCustomerAccountNumberExist(Int32 holderId, String accountNumber)
         {
-	        Customer customer = _DbContext.Customers.First(s => s.Id == holderId);
+	        Customer customer = _DbContext.Customers.Include("Accounts").First(s => s.Id == holderId);
 
-			return customer.Accounts?.Any(s => s.Number == accountNumber) ?? true;
+	        if (customer.Accounts != null)
+	        {
+		        return customer.Accounts.Any(s => s.Number == accountNumber);
+	        }
+
+	        return false;
         }
-    }
+	}
 }

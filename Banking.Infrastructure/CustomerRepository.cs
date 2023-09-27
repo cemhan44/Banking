@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Banking.Application;
 using Banking.Infrastructure.Context;
@@ -38,7 +39,7 @@ namespace Banking.Infrastructure
 	        if (!HasCustomerAccounts(holderId))
 		        throw new Exception("Holder has no account!");
 
-            return _DbContext.Customers.First(s => s.Id == holderId).Accounts.AsEnumerable();
+            return _DbContext.Accounts.Where(s=>s.HolderId == holderId).Include(s=>s.Customer).AsEnumerable();
         }
 
         public Task<Int32> SaveChangesAsync()
@@ -64,6 +65,19 @@ namespace Banking.Infrastructure
 		        return false;
 
 	        return true;
+        }
+
+        public Customer GetCustomer(Int32 id)
+        {
+	        if (!IsCustomerExist(id))
+		        throw new Exception("Holder could not be found!");
+
+	        return _DbContext.Customers.First(s => s.Id == id);
+        }
+        
+        public IEnumerable<Customer> GetCustomers(Int32 skip, Int32 take)
+        {
+	        return _DbContext.Customers.OrderBy(s => s).Skip(skip).Take(take).AsEnumerable();
         }
     }
 
